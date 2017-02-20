@@ -8,7 +8,7 @@ The sketch_* folders have the sketch files that are used to load onto the Arduin
 #### AES-128:
 |Plaintext size|Forward cipher (in microseconds)|Inverse cipher (in microseconds)|
 |-------------:|-------------------------------:|-------------------------------:|
-|16 bytes      |820                             |1680                            |
+|16 bytes      |820                             |1690                            |
 |1 KB          |50,000                          |104,000                         |
 |10 KB         |501,000                         |1,045,000                       |
 |100 KB        |5,009,000                       |10,449,000                      |
