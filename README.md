@@ -4,7 +4,18 @@ This project contains my attempts at implementing and measuring the performace o
 
 The sketch_* folders have the sketch files that are used to load onto the Arduino.
 
-Resources:
+### Results:
+#### AES-128:
+|Plaintext size|Forward cipher (in microseconds)|Inverse cipher (in microseconds)|
+|-------------:|-------------------------------:|-------------------------------:|
+|16 bytes      |820                             |1680                            |
+|1 KB          |50,000                          |104,000                         |
+|10 KB         |501,000                         |1,045,000                       |
+|100 KB        |5,009,000                       |10,449,000                      |
+|1 MB          |50,088,000                      |104,491,000                     |
+*The times in the last four rows are rounded to the nearest millisecond.
+
+### Resources:
 - [AES Proposal: Rijndael](http://csrc.nist.gov/archive/aes/rijndael/Rijndael-ammended.pdf)
 - [FIPS 197: AES](http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf)
 - [AES Speed](https://cr.yp.to/aes-speed.html)
