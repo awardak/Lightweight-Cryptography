@@ -252,8 +252,8 @@ void fatalError(const char *msg) {
 }
 
 /*
- * aes() is the main interface to the aes cipher.  It breaks up the plain text
- * into 16 byte blocks and feeds each block to the main cipher routine.
+ * This is the main interface to the aes cipher.  It breaks up the plain text
+ * into 16 byte blocks and feeds each block to the cipher routine.
  *
  * if encrypt == 1, then encrypt, else decrypt
  */

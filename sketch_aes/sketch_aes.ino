@@ -17,14 +17,30 @@
  unsigned long time;
  unsigned long cipherDuration;
  unsigned long invCipherDuration;
+ unsigned long simTextSize = 0;
 
  void loop() {
   Serial.println("========== start AES =======================");
   
-  // turn the LED off to signal start of test
-  digitalWrite(LED_BUILTIN, LOW);    
+  // turn the LED on to signal start of test
+  digitalWrite(LED_BUILTIN, HIGH);    
 
-  test1();
+  switch(simTextSize) {
+    case 0:       simTextSize = 16;
+                  break;
+    case 16:      simTextSize = 1000;
+                  break;
+    case 1000:    simTextSize = 10000;
+                  break;
+    case 10000:   simTextSize = 100000;
+                  break;
+    case 100000:  simTextSize = 1000000;
+                  break;
+    case 1000000: simTextSize = 16;
+                  break;
+  }
+  
+  test1(simTextSize);
 
   Serial.println();
   Serial.println("forward cipher duration (in microseconds): ");
@@ -32,10 +48,10 @@
   Serial.println("inverse cipher duration (in microseconds): ");
   Serial.println(invCipherDuration);
 
-  // turn the LED on to signal end of test
-  digitalWrite(LED_BUILTIN, HIGH);
+  // turn the LED off to signal end of test
+  digitalWrite(LED_BUILTIN, LOW);
 
-  delay(10000);
+  // delay(10000);
  }
 
 #include <stdio.h>      // printf
@@ -159,7 +175,7 @@ const uint8_t rcon[] = {
 };
 
 
-void encrypt(int encrypt, uint8_t plainText[], int textSize, uint8_t key[], uint8_t cipherText[]);
+void encrypt(int encrypt, uint8_t plainText[], int textSize, uint8_t key[], uint8_t cipherText[], unsigned long);
 void cipher(uint8_t inBlock[16], uint8_t outBlock[16], uint8_t keySched[]);
 void invCipher(uint8_t inBlock[16], uint8_t outBlock[16], uint8_t keySched[]);
 void keyExpansion(const uint8_t inputKey[], uint8_t expandedKey[]);
@@ -186,8 +202,15 @@ void fatalError(const char *msg) {
  * into 16 byte blocks and feeds each block to the main cipher routine.
  *
  * if encrypt == 1, then encrypt, else decrypt
+ *
+ * To simulate 1K, 10K, and 1M plain text sizes, we just run the cipher routine on
+ * the same plaintext multiple times because the Arduino is limited to 2K of RAM so
+ * we can't have real static data, and it's limited to 32K of flash memory
+ * - int simCounter is the number of times to simulate the cipher, e.g. for plain
+ * text size of 1000 bytes, simCounter = 1000 / 16 
  */
-void encrypt(int encrypt, uint8_t plainText[], int textSize, uint8_t inputKey[], uint8_t cipherText[]) {
+void encrypt(int encrypt, uint8_t plainText[], int textSize, uint8_t inputKey[], uint8_t cipherText[],
+                unsigned long simCounter) {
     uint8_t inBlock[BLOCK_SIZE];
     uint8_t outBlock[BLOCK_SIZE];
     uint8_t keySched[KEY_SCHED_SIZE];
@@ -208,13 +231,18 @@ void encrypt(int encrypt, uint8_t plainText[], int textSize, uint8_t inputKey[],
         
         if (encrypt == 1) {
             time = micros();
-            cipher(inBlock, outBlock, keySched);
+            for (int counter = 0; counter < simCounter; counter++) {
+                cipher(inBlock, outBlock, keySched);
+            }
             cipherDuration = micros();
             cipherDuration = cipherDuration - time;
         }
         else {
+            // micros() returns the total amount of microseconds the program has been running
             time = micros();
-            invCipher(inBlock, outBlock, keySched);
+            for (int counter = 0; counter < simCounter; counter++) {
+                invCipher(inBlock, outBlock, keySched);
+            }
             invCipherDuration = micros();
             invCipherDuration = invCipherDuration - time;
         }
@@ -518,20 +546,21 @@ void xorBytes(uint8_t *dest, const uint8_t *a, const uint8_t *b, int numBytes) {
 }
 
 void test3() {
-    uint8_t plainText[] = "Hello everyone, this is my very first secret message \
+    uint8_t plainText[] = "Hello everyone, this is a very very secret message \
                            to you and I will encrypt it using the aes cipher.";
     int textSize = sizeof(plainText) / sizeof(plainText[0]);
     uint8_t key[] = {0x03, 0x01, 0x05, 0x02, 0x0f, 0x0a, 0x09, 0x07,
                      0x0a, 0x09, 0x08, 0x0b, 0x03, 0x0c, 0x0e, 0x0d};
     uint8_t cipherText[textSize];
-    encrypt(1, plainText, textSize, key, cipherText);
+    encrypt(1, plainText, textSize, key, cipherText, 1);
     print(plainText, textSize, cipherText);
 
     uint8_t decryptedText[16];
-    encrypt(0, cipherText, textSize, key, decryptedText);
+    encrypt(0, cipherText, textSize, key, decryptedText, 1);
     printMsg("decrypted: \n", decryptedText, textSize);
 }
 void test2() {
+    Serial.println("Running test2()...\n");
     uint8_t plainText[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                            0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
                            0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
@@ -540,40 +569,42 @@ void test2() {
     uint8_t key[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                      0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
     uint8_t cipherText[textSize];
-    encrypt(1, plainText, textSize, key, cipherText);
-
-    print(plainText, textSize, cipherText);
+    encrypt(1, plainText, textSize, key, cipherText, 1);
 
     uint8_t decryptedText[16];
-    encrypt(0, cipherText, textSize, key, decryptedText);
-    printMsg("decrypted: \n", decryptedText, textSize);
+    encrypt(0, cipherText, textSize, key, decryptedText, 1);
+
+    arduinoPrint("plaintext before encryption: ", plainText, textSize);
+    arduinoPrint("ciphertext after encryption: ", cipherText, textSize);
+    arduinoPrint("text after decryption: ", decryptedText, textSize);
 }
-void test1() {
-  Serial.println("Running test1()...");
+/*
+ * simTextSize is the simulated size of plain text, e.g. simTextSize=1000
+ * means we want to simulate the encryption on a text size of 1KB
+ */
+void test1(unsigned long simTextSize) {
+    Serial.print("Running test on plain text size of: ");
+    Serial.println(simTextSize);
+    Serial.println();
     uint8_t plainText[] = {0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d,
                            0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34};
     int textSize = sizeof(plainText) / sizeof(plainText[0]);
     uint8_t key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
                      0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
     uint8_t cipherText[textSize];
-
+    
     arduinoPrint("plaintext before encryption: ", plainText, textSize);
     
-    encrypt(1, plainText, textSize, key, cipherText);
-    
+    unsigned long simCounter = simTextSize / 16;
+    encrypt(1, plainText, textSize, key, cipherText, simCounter);
     arduinoPrint("ciphertext after encryption: ", cipherText, textSize);
-
-    // print(plainText, textSize, cipherText);
-
+    
     uint8_t decryptedText[16];
-    encrypt(0, cipherText, textSize, key, decryptedText);
-
+    encrypt(0, cipherText, textSize, key, decryptedText, simCounter);
     arduinoPrint("plaintext after decryption: ", decryptedText, textSize);
-
-    // printMsg("decrypted: \n", decryptedText, textSize);
 }
 void arduinoPrint(const char header[], uint8_t msg[], int size) {
-  Serial.println(header);
+    Serial.println(header);
     for (int i = 0; i < size; i++) {
       Serial.print(msg[i], HEX);
       Serial.print(" ");
@@ -581,25 +612,3 @@ void arduinoPrint(const char header[], uint8_t msg[], int size) {
     Serial.println();
 }
 
-void printMsg(const char header[], uint8_t text[], uint8_t size) {
-    printf("%s", header);
-    for (int i = 0; i < size; i++) {
-        if (i>0 && i%16 == 0) printf("\n");
-        printf("%02x ", text[i]);
-    }
-    printf("\n");
-}
-void print(uint8_t plainText[], uint8_t textSize, uint8_t cipherText[]) {
-    printf("plaintext: \n");
-    for (int i = 0; i < textSize; i++) {
-        if (i>0 && i%16 == 0) printf("\n");
-        printf("%02x ", plainText[i]);
-    }
-    printf("\n");
-    printf("ciphertxt: \n");
-    for (int i = 0; i < textSize; i++) {
-        if (i>0 && i%16 == 0) printf("\n");
-        printf("%02x ", cipherText[i]);
-    }
-    printf("\n");
-}
