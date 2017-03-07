@@ -632,12 +632,12 @@ void test1() {
     uint8_t cipherText[textSize];
     encrypt(1, plainText, textSize, key, cipherText);
 
-    print(plainText, textSize, cipherText);
+//    print(plainText, textSize, cipherText);
 
     uint8_t decryptedText[16];
     encrypt(0, cipherText, textSize, key, decryptedText);
 
-    printMsg("decrypted: \n", decryptedText, textSize);
+//    printMsg("decrypted: \n", decryptedText, textSize);
 }
 
 void printMsg(const char header[], uint8_t text[], uint8_t size) {
