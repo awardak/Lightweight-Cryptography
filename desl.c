@@ -168,14 +168,30 @@ void f(uint8_t r[4], uint8_t k[6], uint8_t out[4]) {
     uint8_t er[6];
     uint8_t ser[4];
     
+    /* 
+     * Expand 32-bit block to 48 bits
+     */
     for (int i = 0; i < 48; i++) {
-            shiftSize = message_expansion[i];
-            shiftByte = 0x80 >> ((shiftSize - 1)%8);
-            shiftByte &= r[(shiftSize - 1)/8];
-            shiftByte <<= ((shiftSize - 1)%8);
+        // find the number of the bit to use in the output
+        // (e.g. 32)
+        shiftSize = message_expansion[i];
 
-            er[i/8] |= (shiftByte >> i%8);
+        // find which bit this corresponds to in the input byte
+        // (e.g. 0x01)
+        shiftByte = 0x80 >> ((shiftSize - 1)%8);
+
+        // find the correct input byte and copy over the bit
+        // (e.g. 0x01)
+        shiftByte &= r[(shiftSize - 1)/8];
+
+        // shift the bit value over to the very left
+        // (e.g. 0x80)
+        shiftByte <<= ((shiftSize - 1)%8);
+
+        // copy the value into the correct bit in the output
+        er[i/8] |= (shiftByte >> i%8);
     }
+    
     for (int i = 0; i < 6; i++) {
         er[i] ^= k[i];
     }
