@@ -172,23 +172,28 @@ void f(uint8_t r[4], uint8_t k[6], uint8_t out[4]) {
      * Expand 32-bit block to 48 bits
      */
     for (int i = 0; i < 48; i++) {
-        // find the number of the bit to use in the output
+        // find the number of the bit to use
+        // in the output
         // (e.g. 32)
         shiftSize = message_expansion[i];
 
-        // find which bit this corresponds to in the input byte
+        // find which bit this corresponds to
+        // in the input byte
         // (e.g. 0x01)
         shiftByte = 0x80 >> ((shiftSize - 1)%8);
 
-        // find the correct input byte and copy over the bit
+        // find the correct input byte and
+        // copy over the bit
         // (e.g. 0x01)
         shiftByte &= r[(shiftSize - 1)/8];
 
-        // shift the bit value over to the very left
+        // shift the bit value over to the
+        // very left
         // (e.g. 0x80)
         shiftByte <<= ((shiftSize - 1)%8);
 
-        // copy the value into the correct bit in the output
+        // copy the value into the correct bit
+        // in the output
         er[i/8] |= (shiftByte >> i%8);
     }
     
