@@ -172,8 +172,8 @@ void f(uint8_t r[4], uint8_t k[6], uint8_t out[4]) {
      * Expand 32-bit block to 48 bits
      */
     for (int i = 0; i < 48; i++) {
-        // find the number of the bit to use
-        // in the output
+        // find the index of the bit to use
+        // in the input block
         // (e.g. 32)
         shiftSize = message_expansion[i];
 
