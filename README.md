@@ -13,7 +13,7 @@ The sketch_* folders have the sketch files that are used to load onto the Arduin
 |10 KB         |501,000                         |1,045,000                       |
 |100 KB        |5,009,000                       |10,449,000                      |
 |1 MB          |50,088,000                      |104,491,000                     |
-*The times in the last four rows are rounded to the nearest millisecond.
+*The times in the last four rows are rounded to the nearest microsecond.
 
 ### Resources:
 - [AES Proposal: Rijndael](http://csrc.nist.gov/archive/aes/rijndael/Rijndael-ammended.pdf)
